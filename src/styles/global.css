@@ -1,0 +1,44 @@
+/* Global styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile responsiveness - now handled by Tailwind classes */
+
+/* Ensure images don't overflow on mobile - exclude navigation and quadrant background images */
+img:not(nav img):not(.quadrant-bg) {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent scrolling on homepage only */
+.homepage-no-scroll {
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* Minimal custom styles - most styling now handled by Tailwind */
+
+/* Handwritten font for titles */
+.font-handwritten {
+  font-family: 'Reenie Beanie', cursive !important;
+}
+
+/* Pixel/Arcade font */
+.font-pixel,
+span.font-pixel,
+.font-pixel * {
+  font-family: 'Press Start 2P', monospace !important;
+  font-weight: normal !important;
+}

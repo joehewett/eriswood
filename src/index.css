@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P:wght@400&display=swap');
+
+/* Remove default margins and padding */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  margin: 0;
+  padding: 0;
+}

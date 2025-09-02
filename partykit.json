@@ -1,0 +1,8 @@
+{
+  "name": "pixel-adventure-multiplayer",
+  "main": "server/index.ts",
+  "compatibilityDate": "2024-01-01",
+  "vars": {
+    "NODE_ENV": "development"
+  }
+}
