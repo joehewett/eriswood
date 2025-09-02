@@ -7,7 +7,7 @@ import {
   PlayerUpdateMessage,
   LocationChangeMessage,
   HeartbeatMessage,
-} from "../src/components/game/multiplayer/types";
+} from "../src/multiplayer/types";
 
 export default class PixelAdventureServer implements Party.Server {
   // Map of playerId -> PlayerState for this room/location
