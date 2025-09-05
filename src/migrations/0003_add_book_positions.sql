@@ -21,3 +21,9 @@ SET
   position_y = (numbered_reviews.row_num / 5) * 200
 FROM numbered_reviews
 WHERE book_reviews.id = numbered_reviews.id;
+
+-- Allow anyone to update book positions (for drag and drop)
+DROP POLICY IF EXISTS "Users can update their own book reviews" ON book_reviews;
+
+CREATE POLICY "Anyone can update book positions" ON book_reviews
+  FOR UPDATE USING (true);
