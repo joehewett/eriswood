@@ -33,6 +33,7 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
   const [showAddForm, setShowAddForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const [selectedReview, setSelectedReview] = useState<BookReview | null>(null);
   const [newReview, setNewReview] = useState({
     title: '',
     url: '',
@@ -114,30 +115,30 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
       />
       
       {/* Main inventory modal */}
-      <div className="relative w-[90vw] h-[85vh] max-w-6xl bg-gradient-to-b from-amber-100 to-amber-50 border-8 border-amber-800 rounded-lg shadow-2xl">
-        {/* Ornate header */}
-        <div className="relative bg-gradient-to-r from-amber-800 to-amber-700 p-6 rounded-t-lg">
-          <h1 className="text-3xl font-bold text-amber-100 text-center font-serif tracking-wide">
-            📚 Book Review Collection 📚
-          </h1>
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 bg-amber-900 hover:bg-amber-950 text-amber-100 rounded-full flex items-center justify-center transition-colors duration-200"
-          >
-            <X size={20} />
-          </button>
-        </div>
+      <div 
+        className="relative w-[90vw] h-[85vh] max-w-6xl bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(/game/bookshelfempty.png)'
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 w-8 h-8 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full flex items-center justify-center transition-all duration-200"
+        >
+          <X size={20} />
+        </button>
 
         {/* Scrollable content area */}
-        <div className="flex flex-col h-[calc(100%-120px)] p-6">
+        <div className="flex flex-col h-full p-6">
           {/* Add new review button */}
           <div className="mb-6">
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors duration-200 shadow-lg"
+              className="bg-none hover:bg-none text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors duration-200 shadow-lg hover:cursor-pointer"
             >
               <Plus size={20} />
-              Add New Review
+              
             </button>
           </div>
 
@@ -206,58 +207,37 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
             </div>
           )}
 
-          {/* Reviews list */}
+          {/* Book Images Grid */}
           <div className="flex-1 overflow-y-auto">
             {loadingReviews ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-amber-700 text-lg font-semibold">Loading book reviews...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {reviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="bg-white p-6 rounded-lg border-4 border-amber-600 shadow-lg hover:shadow-xl transition-shadow duration-200"
-                >
-                  {/* Book title and link */}
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-amber-800 mb-2 flex items-center gap-2">
-                      {review.title}
-                      <a
-                        href={review.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                      >
-                        <ExternalLink size={18} />
-                      </a>
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Added by {review.player_name} on {new Date(review.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  {/* Reviews */}
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border-l-4 border-purple-500">
-                      <h4 className="font-bold text-purple-800 mb-2 flex items-center gap-2">
-                        🎭 Coro's Review
-                      </h4>
-                      <p className="text-purple-700 text-sm leading-relaxed">{review.coro_review}</p>
-                    </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-4">
+                {reviews.map((review, index) => (
+                  <div
+                    key={review.id}
+                    className="relative group cursor-pointer transform hover:scale-105 transition-transform duration-200"
+                    onClick={() => setSelectedReview(review)}
+                  >
+                    {/* Book Image */}
+                    <img
+                      src={`/game/book1.png`}
+                      alt={review.title}
+                      className="w-full h-auto rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200"
+                    />
                     
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
-                      <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
-                        🧑‍💻 Joe's Review
-                      </h4>
-                      <p className="text-blue-700 text-sm leading-relaxed">{review.joe_review}</p>
+                    {/* Hover Tooltip */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-80 text-white p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <p className="text-sm font-semibold truncate">{review.title}</p>
+                      <p className="text-xs text-gray-300">by {review.player_name}</p>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
                 
                 {reviews.length === 0 && !loadingReviews && (
-                  <div className="text-center py-12">
+                  <div className="col-span-full text-center py-12">
                     <p className="text-amber-700 text-lg font-semibold">No book reviews yet!</p>
                     <p className="text-amber-600">Click "Add New Review" to get started.</p>
                   </div>
@@ -266,14 +246,60 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
             )}
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="bg-gradient-to-r from-amber-800 to-amber-700 p-4 rounded-b-lg">
-          <p className="text-center text-amber-100 text-sm font-semibold">
-            📖 Collected Wisdom from Our Reading Adventures 📖
-          </p>
-        </div>
       </div>
+
+      {/* Book Review Detail Modal */}
+      {selectedReview && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-60"
+            onClick={() => setSelectedReview(null)}
+          />
+          <div className="relative bg-white p-6 rounded-lg border-4 border-amber-600 shadow-2xl max-w-2xl max-h-[80vh] overflow-y-auto mx-4">
+            <button
+              onClick={() => setSelectedReview(null)}
+              className="absolute top-4 right-4 w-8 h-8 bg-amber-900 hover:bg-amber-950 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Book title and link */}
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-amber-800 mb-2 flex items-center gap-2">
+                {selectedReview.title}
+                <a
+                  href={selectedReview.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                >
+                  <ExternalLink size={20} />
+                </a>
+              </h3>
+              <p className="text-sm text-gray-600">
+                Added by {selectedReview.player_name} on {new Date(selectedReview.created_at).toLocaleDateString()}
+              </p>
+            </div>
+
+            {/* Reviews */}
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border-l-4 border-purple-500">
+                <h4 className="font-bold text-purple-800 mb-2 flex items-center gap-2">
+                  🎭 Coro's Review
+                </h4>
+                <p className="text-purple-700 text-sm leading-relaxed">{selectedReview.coro_review}</p>
+              </div>
+              
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
+                <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                  🧑‍💻 Joe's Review
+                </h4>
+                <p className="text-blue-700 text-sm leading-relaxed">{selectedReview.joe_review}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
