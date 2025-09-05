@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, ExternalLink } from 'lucide-react';
+import Draggable from 'react-draggable';
 import { supabase } from '../lib/supabase';
 
 interface BookReview {
@@ -10,6 +11,8 @@ interface BookReview {
   url: string;
   coro_review: string;
   joe_review: string;
+  position_x: number;
+  position_y: number;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +44,20 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
     joeReview: ''
   });
 
+  // Create a ref map to store refs for each review
+  const nodeRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>({});
+  
+  // Track drag state to prevent click events during drag
+  const dragState = useRef<{ [key: string]: boolean }>({});
+
+  // Helper function to get or create a ref for a review
+  const getNodeRef = (reviewId: string) => {
+    if (!nodeRefs.current[reviewId]) {
+      nodeRefs.current[reviewId] = React.createRef<HTMLDivElement>() as React.RefObject<HTMLDivElement>;
+    }
+    return nodeRefs.current[reviewId];
+  };
+
   // Load reviews when component opens
   useEffect(() => {
     if (isOpen) {
@@ -69,6 +86,48 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
     }
   };
 
+  const updateBookPosition = async (bookId: string, x: number, y: number) => {
+    try {
+      console.log('Updating book position:', { bookId, x, y });
+      
+      // First, let's check if the record exists
+      const { data: existingRecord, error: selectError } = await supabase
+        .from('book_reviews')
+        .select('id, title, position_x, position_y')
+        .eq('id', bookId)
+        .single();
+
+      if (selectError) {
+        console.error('Error finding record:', selectError);
+        return;
+      }
+
+      console.log('Found existing record:', existingRecord);
+
+      const { data, error } = await supabase
+        .from('book_reviews')
+        .update({ position_x: x, position_y: y })
+        .eq('id', bookId)
+        .select(); // Add select to see what was updated
+
+      if (error) {
+        console.error('Error updating book position:', error);
+        return;
+      }
+
+      console.log('Position update successful:', data);
+
+      // Update local state
+      setReviews(prev => prev.map(review => 
+        review.id === bookId 
+          ? { ...review, position_x: x, position_y: y }
+          : review
+      ));
+    } catch (error) {
+      console.error('Error updating book position:', error);
+    }
+  };
+
   const handleAddReview = async () => {
     if (!currentPlayerId || !currentPlayerName) return;
     
@@ -76,6 +135,10 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
       try {
         setIsLoading(true);
         
+        // Calculate default position for new book (try to avoid overlapping)
+        const defaultX = Math.floor(Math.random() * 400) + 50;
+        const defaultY = Math.floor(Math.random() * 300) + 100;
+
         const { error } = await supabase
           .from('book_reviews')
           .insert({
@@ -84,7 +147,9 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
             title: newReview.title,
             url: newReview.url,
             coro_review: newReview.coroReview,
-            joe_review: newReview.joeReview
+            joe_review: newReview.joeReview,
+            position_x: defaultX,
+            position_y: defaultY
           });
 
         if (error) {
@@ -207,39 +272,79 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
             </div>
           )}
 
-          {/* Book Images Grid */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Book Images - Draggable Absolute Positioning */}
+          <div className="flex-1 overflow-hidden relative">
             {loadingReviews ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-amber-700 text-lg font-semibold">Loading book reviews...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-4">
-                {reviews.map((review, index) => (
-                  <div
-                    key={review.id}
-                    className="relative group cursor-pointer transform hover:scale-105 transition-transform duration-200"
-                    onClick={() => setSelectedReview(review)}
-                  >
-                    {/* Book Image */}
-                    <img
-                      src={`/game/book1.png`}
-                      alt={review.title}
-                      className="w-full h-auto rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200"
-                    />
-                    
-                    {/* Hover Tooltip */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-80 text-white p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <p className="text-sm font-semibold truncate">{review.title}</p>
-                      <p className="text-xs text-gray-300">by {review.player_name}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="relative w-full h-full">
+                {reviews.map((review) => {
+                  // Get or create a ref for this review
+                  const nodeRef = getNodeRef(review.id);
+                  
+                  return (
+                    <Draggable
+                      key={review.id}
+                      nodeRef={nodeRef}
+                      position={{ x: review.position_x || 0, y: review.position_y || 0 }}
+                      onStart={() => {
+                        // Mark as dragging when drag starts
+                        dragState.current[review.id] = true;
+                      }}
+                      onDrag={(e, data) => {
+                        // Update local state immediately during drag for smooth movement
+                        setReviews(prev => prev.map(r => 
+                          r.id === review.id 
+                            ? { ...r, position_x: data.x, position_y: data.y }
+                            : r
+                        ));
+                      }}
+                      onStop={(e, data) => {
+                        updateBookPosition(review.id, data.x, data.y);
+                        // Reset drag state after a short delay to prevent immediate click
+                        setTimeout(() => {
+                          dragState.current[review.id] = false;
+                        }, 100);
+                      }}
+                      bounds="parent"
+                    >
+                      <div ref={nodeRef} className="absolute w-24 h-32 cursor-move">
+                        <div
+                          className="relative group w-full h-full"
+                          onClick={() => {
+                            // Only open review if not currently dragging
+                            if (!dragState.current[review.id]) {
+                              setSelectedReview(review);
+                            }
+                          }}
+                        >
+                          {/* Book Image */}
+                          <img
+                            src={`/game/book1.png`}
+                            alt={review.title}
+                            className="w-full h-full object-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 select-none"
+                            draggable={false}
+                          />
+                          
+                          {/* Hover Tooltip */}
+                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-80 text-white p-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                            <p className="text-xs font-semibold truncate">{review.title}</p>
+                            <p className="text-xs text-gray-300 truncate">by {review.player_name}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </Draggable>
+                  );
+                })}
                 
                 {reviews.length === 0 && !loadingReviews && (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-amber-700 text-lg font-semibold">No book reviews yet!</p>
-                    <p className="text-amber-600">Click "Add New Review" to get started.</p>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-amber-700 text-lg font-semibold">No book reviews yet!</p>
+                      <p className="text-amber-600">Click "Add New Review" to get started.</p>
+                    </div>
                   </div>
                 )}
               </div>
