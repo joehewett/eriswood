@@ -76,20 +76,11 @@ export const CharacterSelect: React.FC<CharacterSelectProps> = ({ onSelect }) =>
 				}}
 			>
 				<img
-					src="/game/campfire.webp"
+					src="/game/campfire2.png"
 					alt="Campfire Scene"
 					className="w-full h-full block select-none"
 					draggable={false}
 					style={{ imageRendering: 'pixelated' }}
-				/>
-				
-				{/* Eriswood gif at top center */}
-				<img
-					src="/game/eriswood.gif"
-					alt="Eriswood"
-					className="absolute top-4 left-1/2 transform -translate-x-1/2 select-none"
-					draggable={false}
-					style={{ imageRendering: 'pixelated', zIndex: 2 }}
 				/>
 				
 				{/* Fire particle effect positioned at bottom middle */}
@@ -102,7 +93,7 @@ export const CharacterSelect: React.FC<CharacterSelectProps> = ({ onSelect }) =>
 			</div>
 
 			{/* Character selection overlay */}
-			<div className="relative z-10 flex gap-12 md:gap-24">
+			<div className="relative z-10 flex gap-12 md:gap-36 pt-36">
 				<button
 					onClick={() => onSelect('coro')}
 					className="group flex flex-col items-center cursor-pointer focus:outline-none"
@@ -119,7 +110,7 @@ export const CharacterSelect: React.FC<CharacterSelectProps> = ({ onSelect }) =>
 				>
 					<BouncingHedgehog alt="Joe" delay={500} className="filter hue-rotate-[20deg]" />
 					<span className="mt-2 text-base font-pixel tracking-widest text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] group-hover:text-yellow-200">
-						Joe
+						Joey
 					</span>
 				</button>
 			</div>

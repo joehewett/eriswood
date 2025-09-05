@@ -13,4 +13,5 @@ export { ProximityVisualization } from './ProximityVisualization';
 export { MessageBoard } from './MessageBoard';
 export { DiaryEntry, type DiaryEntryData } from './DiaryEntry';
 export { DiaryEntryModal } from './DiaryEntryModal';
+export { BookReviewInventory } from './BookReviewInventory';
 export { FireEffect } from './FireEffect';

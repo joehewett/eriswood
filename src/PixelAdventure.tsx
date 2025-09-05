@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GameLocation } from './types';
-import { GameMap, Character, LoadingScreen, InteractionZones, BuildingInteractionPrompt, MultiplayerPlayers, ConnectionStatus, CharacterSelect, ProximityVisualization, MessageBoard } from './components';
+import { GameMap, Character, LoadingScreen, InteractionZones, BuildingInteractionPrompt, MultiplayerPlayers, ConnectionStatus, CharacterSelect, ProximityVisualization, MessageBoard, BookReviewInventory } from './components';
 import { 
   useFixedCanvasLayout,
   usePlayerMovement, 
@@ -20,6 +20,8 @@ const PixelAdventure: React.FC = () => {
   const [showDebug, setShowDebug] = useState(true); // Enable debug mode by default
   const [isLoading, setIsLoading] = useState(false);
   const gameContainerRef = useRef<HTMLDivElement>(null);
+
+
   
   // Custom hooks - use fixed canvas layout
   const mapRect = useCenteredFixedCanvasLayout();
@@ -67,6 +69,8 @@ const PixelAdventure: React.FC = () => {
     facingDirection: playerMovement.facingDirection,
     mapRect: mapRect
   });
+
+
 
   // Auto-focus the game container to ensure keyboard events are captured
   useEffect(() => {
@@ -169,6 +173,14 @@ const PixelAdventure: React.FC = () => {
           onModalTriggered={() => interactionSystem.clearModalTrigger('diary-entry-create')}
         />
       )}
+
+      {/* Book Review Inventory Modal */}
+      <BookReviewInventory
+        isOpen={interactionSystem.isComponentVisible('book-reviews')}
+        onClose={() => interactionSystem.handleComponentToggle('book-reviews', 'hide')}
+        currentPlayerId={multiplayer.currentPlayerId}
+        currentPlayerName={selectedCharacter ?? 'Player'}
+      />
 
       {/* Debug Toggle Button */}
       <button
