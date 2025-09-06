@@ -1,8 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Position, MapRect, InteractionZone } from '../types';
 import { gameConfig, getDefaultNPCPosition, getValidPosition, getRandomDirection, shouldNPCStop, isWithinProximity } from '../utils';
 
 export const useNPCBehavior = (mapRect: MapRect, playerPosition: Position, collisionZones: InteractionZone[] = []) => {
+  // Use refs to avoid recreating the update function
+  const playerPositionRef = useRef(playerPosition);
+  const mapRectRef = useRef(mapRect);
+  const collisionZonesRef = useRef(collisionZones);
+  
+  // Update refs when values change
+  useEffect(() => {
+    playerPositionRef.current = playerPosition;
+  }, [playerPosition]);
+  
+  useEffect(() => {
+    mapRectRef.current = mapRect;
+  }, [mapRect]);
+  
+  useEffect(() => {
+    collisionZonesRef.current = collisionZones;
+  }, [collisionZones]);
   const [npcPosition, setNpcPosition] = useState<Position>({ x: 0, y: 0 });
   const [npcFrame, setNpcFrame] = useState(0);
   const [npcIsMoving, setNpcIsMoving] = useState(false);
@@ -21,8 +38,8 @@ export const useNPCBehavior = (mapRect: MapRect, playerPosition: Position, colli
     }
   }, [mapRect]);
 
-  const updateNPCPosition = () => {
-    if (mapRect.width === 0 || mapRect.height === 0) {
+  const updateNPCPosition = useCallback(() => {
+    if (mapRectRef.current.width === 0 || mapRectRef.current.height === 0) {
       return;
     }
 
@@ -34,7 +51,7 @@ export const useNPCBehavior = (mapRect: MapRect, playerPosition: Position, colli
       npcMoveTimerRef.current++;
 
       // Check if player is nearby before moving
-      const isPlayerNearby = isWithinProximity(playerPosition, prev);
+      const isPlayerNearby = isWithinProximity(playerPositionRef.current, prev);
 
       // Change direction every interval, but only if player is not nearby
       if (!isPlayerNearby && npcMoveTimerRef.current % gameConfig.npcDirectionChangeInterval === 0) {
@@ -57,8 +74,8 @@ export const useNPCBehavior = (mapRect: MapRect, playerPosition: Position, colli
         { x: newX, y: newY }, 
         prev, 
         gameConfig.hedgehogSize, 
-        mapRect, 
-        collisionZones
+        mapRectRef.current, 
+        collisionZonesRef.current
       );
 
       // Update NPC animation
@@ -75,7 +92,7 @@ export const useNPCBehavior = (mapRect: MapRect, playerPosition: Position, colli
       currentNpcPositionRef.current = validPosition;
       return validPosition;
     });
-  };
+  }, []); // Empty dependency array since we use refs
 
   return {
     npcPosition,

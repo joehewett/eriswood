@@ -90,7 +90,7 @@ export const buildings: Building[] = [
       {
         id: 'library-exit',
         name: 'Exit',
-        relativeX: 0.1, // Near the door/entrance
+        relativeX: 0.425, // Bottom center
         relativeY: 0.8,
         relativeWidth: 0.15,
         relativeHeight: 0.15,
@@ -113,7 +113,7 @@ export const buildings: Building[] = [
       {
         id: 'library-exit',
         name: 'Exit',
-        relativeX: 0.1, // Near the door/entrance
+        relativeX: 0.425, // Bottom center
         relativeY: 0.8,
         relativeWidth: 0.15,
         relativeHeight: 0.15,
@@ -164,7 +164,7 @@ export const buildings: Building[] = [
       {
         id: 'house1-exit',
         name: 'Exit',
-        relativeX: 0.1,
+        relativeX: 0.425, // Bottom center
         relativeY: 0.8,
         relativeWidth: 0.15,
         relativeHeight: 0.15,
@@ -204,7 +204,7 @@ export const buildings: Building[] = [
       {
         id: 'house2-exit',
         name: 'Exit',
-        relativeX: 0.1,
+        relativeX: 0.425, // Bottom center
         relativeY: 0.8,
         relativeWidth: 0.15,
         relativeHeight: 0.15,
@@ -227,7 +227,7 @@ export const buildings: Building[] = [
       {
         id: 'shop-exit',
         name: 'Exit',
-        relativeX: 0.1,
+        relativeX: 0.425, // Bottom center
         relativeY: 0.8,
         relativeWidth: 0.15,
         relativeHeight: 0.15,
@@ -250,7 +250,7 @@ export const buildings: Building[] = [
       {
         id: 'book-room-exit',
         name: 'Exit',
-        relativeX: 0.1,
+        relativeX: 0.425, // Bottom center
         relativeY: 0.8,
         relativeWidth: 0.15,
         relativeHeight: 0.15,

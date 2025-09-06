@@ -8,3 +8,5 @@ export { useBuildingInteractions } from './useBuildingInteractions';
 export { useImageBounds } from './useImageBounds';
 export { usePartyKitMultiplayer } from './usePartyKitMultiplayer';
 export { useInteractionSystem } from './useInteractionSystem';
+export { useMultipleNPCs } from './useMultipleNPCs';
+export { useAudioSystem } from './useAudioSystem';

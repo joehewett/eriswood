@@ -15,3 +15,5 @@ export { DiaryEntry, type DiaryEntryData } from './DiaryEntry';
 export { DiaryEntryModal } from './DiaryEntryModal';
 export { BookReviewInventory } from './BookReviewInventory';
 export { FireEffect } from './FireEffect';
+export { NPCs } from './NPCs';
+export { NPCInteractionPrompt } from './NPCInteractionPrompt';

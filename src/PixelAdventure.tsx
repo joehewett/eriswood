@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { GameLocation } from './types';
-import { GameMap, Character, LoadingScreen, InteractionZones, BuildingInteractionPrompt, MultiplayerPlayers, ConnectionStatus, CharacterSelect, ProximityVisualization, MessageBoard, BookReviewInventory } from './components';
+import { GameMap, Character, LoadingScreen, InteractionZones, BuildingInteractionPrompt, MultiplayerPlayers, ConnectionStatus, CharacterSelect, ProximityVisualization, MessageBoard, BookReviewInventory, NPCs, NPCInteractionPrompt } from './components';
 import { 
   useFixedCanvasLayout,
   usePlayerMovement, 
@@ -10,7 +10,8 @@ import {
   useImageBounds,
   usePartyKitMultiplayer,
   useCenteredFixedCanvasLayout,
-  useInteractionSystem
+  useInteractionSystem,
+  useMultipleNPCs
 } from './hooks';
 import { getInteractionZonesForLocation, convertRelativeZonesToCanvas } from './utils';
 
@@ -39,6 +40,37 @@ const PixelAdventure: React.FC = () => {
   // Pass canvas collision zones to movement hooks
   const playerMovement = usePlayerMovement(mapRect, canvasCollisionZones);
   const npcBehavior = useNPCBehavior(mapRect, playerMovement.currentPositionRef.current, canvasCollisionZones);
+  
+  // Configure NPCs for the green grocer (shop) - memoized to prevent recreation
+  const shopNPCConfigs = useMemo(() => [
+    {
+      id: 'grocer1',
+      name: 'Martha',
+      initialPosition: { x: 300, y: 200 },
+      audioClip: { id: 'grocer1', src: '/audio/npc/grocer1.mp3', name: 'Martha\'s Greeting' }
+    },
+    {
+      id: 'grocer2', 
+      name: 'Bob',
+      initialPosition: { x: 600, y: 300 },
+      audioClip: { id: 'grocer2', src: '/audio/npc/grocer2.mp3', name: 'Bob\'s Story' }
+    },
+    {
+      id: 'grocer3',
+      name: 'Sarah',
+      initialPosition: { x: 400, y: 450 },
+      audioClip: { id: 'grocer3', src: '/audio/npc/grocer3.mp3', name: 'Sarah\'s Advice' }
+    }
+  ], []); // Empty dependency array since these configs never change
+  
+  // Multiple NPCs system (only active in shop)
+  const multipleNPCs = useMultipleNPCs({
+    mapRect,
+    playerPosition: playerMovement.canvasPosition,
+    collisionZones: canvasCollisionZones,
+    currentLocation,
+    npcConfigs: currentLocation === GameLocation.SHOP ? shopNPCConfigs : []
+  });
   
 
 
@@ -79,21 +111,42 @@ const PixelAdventure: React.FC = () => {
     }
   }, []);
 
+  // Memoize game loop callbacks to prevent recreation
+  const updateNPCPosition = useCallback(() => {
+    // Update single NPC behavior (for other locations)
+    if (currentLocation !== GameLocation.SHOP) {
+      npcBehavior.updateNPCPosition();
+    }
+    // Update multiple NPCs (for shop)
+    if (currentLocation === GameLocation.SHOP) {
+      multipleNPCs.updateNPCPositions();
+    }
+  }, [currentLocation, npcBehavior.updateNPCPosition, multipleNPCs.updateNPCPositions]);
+  
+  const handleInteraction = useCallback((onLocationChange: (location: GameLocation) => void) => {
+    // Handle NPC interactions in shop
+    if (currentLocation === GameLocation.SHOP) {
+      const nearbyNPC = multipleNPCs.getNearbyNPC();
+      if (nearbyNPC) {
+        multipleNPCs.handleNPCInteraction(nearbyNPC.id);
+        return;
+      }
+    }
+    
+    // Use new interaction system for building interactions
+    if (updatedBuildingInteractions.currentInteractionZone?.interaction) {
+      interactionSystem.executeInteraction(updatedBuildingInteractions.currentInteractionZone);
+      return;
+    }
+  }, [currentLocation, multipleNPCs, updatedBuildingInteractions.currentInteractionZone, interactionSystem]);
+
   // Game loop
   useGameLoop({
     updatePlayerPosition: playerMovement.updatePosition,
-    updateNPCPosition: npcBehavior.updateNPCPosition,
+    updateNPCPosition,
     handlePlayerKeyDown: playerMovement.handleKeyDown,
     handlePlayerKeyUp: playerMovement.handleKeyUp,
-    handleInteraction: (onLocationChange) => {
-      // Use new interaction system for building interactions
-      if (updatedBuildingInteractions.currentInteractionZone?.interaction) {
-        interactionSystem.executeInteraction(updatedBuildingInteractions.currentInteractionZone);
-        return;
-      }
-      
-
-    },
+    handleInteraction,
     onLocationChange: setCurrentLocation,
     mapRect
   });
@@ -141,6 +194,34 @@ const PixelAdventure: React.FC = () => {
         players={multiplayer.otherPlayers}
         showPlayerNames={true}
       />
+      
+      {/* NPCs - only show single NPC in non-shop locations */}
+      {currentLocation !== GameLocation.SHOP && (
+        <Character 
+          position={npcBehavior.npcPosition}
+          currentFrame={npcBehavior.npcFrame}
+          alt="NPC Hedgehog"
+          isNPC={true}
+          showDebugBounds={showDebug}
+        />
+      )}
+      
+      {/* Multiple NPCs - only in shop */}
+      {currentLocation === GameLocation.SHOP && (
+        <NPCs 
+          npcs={multipleNPCs.npcs}
+          showDebugBounds={showDebug}
+        />
+      )}
+      
+      {/* NPC Interaction Prompt - only in shop */}
+      {currentLocation === GameLocation.SHOP && (
+        <NPCInteractionPrompt
+          npc={multipleNPCs.getNearbyNPC()}
+          show={!!multipleNPCs.getNearbyNPC()}
+          mapRect={mapRect}
+        />
+      )}
 
 
 
