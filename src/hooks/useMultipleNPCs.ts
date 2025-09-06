@@ -180,16 +180,29 @@ export const useMultipleNPCs = ({
   }, []); // Empty dependency array since we use refs
 
   const handleNPCInteraction = useCallback((npcId: string) => {
+    console.log(`🎯 handleNPCInteraction called for NPC: ${npcId}`);
+    
     setNpcs(prev => {
       const npc = prev.find(n => n.id === npcId);
-      if (!npc || !npc.audioClip) return prev;
+      if (!npc || !npc.audioClip) {
+        console.log(`❌ NPC not found or no audio clip: ${npcId}`);
+        return prev;
+      }
+      
+      console.log(`✅ Found NPC: ${npc.name} with audio clip: ${npc.audioClip.name}`);
 
       // Check if player is close enough
       const distance = calculateDistance(playerPositionRef.current, npc.position);
-      if (distance > gameConfig.proximityDistance) return prev;
+      if (distance > gameConfig.proximityDistance) {
+        console.log(`❌ Player too far: ${Math.round(distance)} > ${gameConfig.proximityDistance}`);
+        return prev;
+      }
+      
+      console.log(`✅ Player close enough: ${Math.round(distance)} <= ${gameConfig.proximityDistance}`);
 
       // If this NPC is already talking, stop
       if (npc.isTalking) {
+        console.log(`🔇 NPC already talking, stopping audio`);
         audioSystem.stopAudio();
         return prev.map(n => 
           n.id === npcId ? { ...n, isTalking: false } : n
@@ -197,21 +210,25 @@ export const useMultipleNPCs = ({
       }
 
       // Stop any other talking NPCs and start this one
+      console.log(`🎵 Starting audio for NPC: ${npc.name}`);
       audioSystem.stopAudio();
       
       // Play audio
       audioSystem.playAudio(npc.audioClip).then(() => {
+        console.log(`✅ Audio finished naturally for ${npc.name}`);
         // Audio finished naturally
         setNpcs(current => current.map(n => 
           n.id === npcId ? { ...n, isTalking: false } : n
         ));
-      }).catch(() => {
-        // Audio failed
+      }).catch((error) => {
+        console.log(`❌ Audio failed for ${npc.name}:`, error);
+        // Audio failed - NPC should stop talking
         setNpcs(current => current.map(n => 
           n.id === npcId ? { ...n, isTalking: false } : n
         ));
       });
 
+      console.log(`🗣️ Setting NPC ${npc.name} to talking state`);
       return prev.map(n => 
         n.id === npcId ? { ...n, isTalking: true } : { ...n, isTalking: false }
       );
@@ -232,34 +249,55 @@ export const useMultipleNPCs = ({
     setNpcs(prev => prev.map(npc => ({ ...npc, isTalking: false })));
   }, [audioSystem]);
 
-  // Create a function to check distance and stop audio if needed
+  // Simple distance check that runs every time - using setNpcs callback to avoid dependencies
+  const lastCheckRef = useRef(0);
   const checkDistanceAndStopAudio = useCallback(() => {
-    setNpcs(prev => {
-      const talkingNPC = prev.find(npc => npc.isTalking);
-      if (talkingNPC) {
-        const distance = calculateDistance(playerPositionRef.current, talkingNPC.position);
-        // Use a smaller buffer for more responsive stopping
-        if (distance > gameConfig.proximityDistance * 1.2) { // 96 pixels instead of 120
-          console.log(`Stopping audio: distance ${Math.round(distance)} > threshold ${gameConfig.proximityDistance * 1.2}`);
-          audioSystem.stopAudio();
-          return prev.map(npc => ({ ...npc, isTalking: false }));
-        }
-      }
-      return prev;
-    });
-  }, [audioSystem]);
-  
-  // Stop audio when player moves too far away - integrated into the update cycle
-  const lastDistanceCheckRef = useRef(0);
-  useEffect(() => {
-    // Only run distance check every few frames for performance
+    // Throttle to reduce console spam
     const now = Date.now();
-    if (now - lastDistanceCheckRef.current < 100) { // ~10fps check rate
-      return;
+    const shouldLog = now - lastCheckRef.current > 200; // Log every 200ms
+    if (shouldLog) {
+      lastCheckRef.current = now;
+      console.log('🔍 checkDistanceAndStopAudio function called');
     }
-    lastDistanceCheckRef.current = now;
-    checkDistanceAndStopAudio();
-  }, [playerPosition, checkDistanceAndStopAudio]);
+    
+    setNpcs(prev => {
+      // Find talking NPC from current state
+      const talkingNPC = prev.find(npc => npc.isTalking);
+      const talkingCount = prev.filter(npc => npc.isTalking).length;
+      
+      if (shouldLog) {
+        console.log(`📊 NPCs status: ${prev.length} total, ${talkingCount} talking`);
+      }
+      
+      if (!talkingNPC) {
+        if (shouldLog) console.log('❌ No talking NPC found');
+        return prev; // No one is talking, no state change needed
+      }
+      
+      if (shouldLog) {
+        console.log(`🗣️ Found talking NPC: ${talkingNPC.name} at (${Math.round(talkingNPC.position.x)}, ${Math.round(talkingNPC.position.y)})`);
+      }
+      
+      // Calculate distance
+      const playerPos = playerPositionRef.current;
+      const npcPos = talkingNPC.position;
+      const distance = calculateDistance(playerPos, npcPos);
+      const threshold = gameConfig.proximityDistance * 1.2; // 96 pixels
+      
+      if (shouldLog) {
+        console.log(`🔍 Distance check: Player(${Math.round(playerPos.x)}, ${Math.round(playerPos.y)}) -> NPC(${Math.round(npcPos.x)}, ${Math.round(npcPos.y)}) = ${Math.round(distance)}px, threshold: ${threshold}px`);
+      }
+      
+      // Stop audio if too far
+      if (distance > threshold) {
+        console.log(`🔇 STOPPING AUDIO: distance ${Math.round(distance)} > threshold ${threshold}`);
+        audioSystem.stopAudio();
+        return prev.map(npc => ({ ...npc, isTalking: false }));
+      }
+      
+      return prev; // No change needed
+    });
+  }, [audioSystem]); // Only depend on audioSystem, not npcs
 
   return {
     npcs,
@@ -267,6 +305,7 @@ export const useMultipleNPCs = ({
     handleNPCInteraction,
     getNearbyNPC,
     stopAllAudio,
+    checkDistanceAndStopAudio,
     audioSystem
   };
 };

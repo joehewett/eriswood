@@ -43,6 +43,7 @@ export const useAudioSystem = () => {
       setIsPlaying(false);
       setCurrentClipId(null);
       audioRef.current = null;
+      throw error; // Re-throw the error so the promise is rejected
     }
   }, []);
 

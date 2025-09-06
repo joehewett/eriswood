@@ -47,19 +47,19 @@ const PixelAdventure: React.FC = () => {
       id: 'grocer1',
       name: 'Martha',
       initialPosition: { x: 300, y: 200 },
-      audioClip: { id: 'grocer1', src: '/audio/npc/grocer1.mp3', name: 'Martha\'s Greeting' }
+      audioClip: { id: 'grocer1', src: '/music/alkharid.mp3', name: 'Martha\'s Greeting' }
     },
     {
       id: 'grocer2', 
       name: 'Bob',
       initialPosition: { x: 600, y: 300 },
-      audioClip: { id: 'grocer2', src: '/audio/npc/grocer2.mp3', name: 'Bob\'s Story' }
+      audioClip: { id: 'grocer2', src: '/music/bonedry.mp3', name: 'Bob\'s Story' }
     },
     {
       id: 'grocer3',
       name: 'Sarah',
       initialPosition: { x: 400, y: 450 },
-      audioClip: { id: 'grocer3', src: '/audio/npc/grocer3.mp3', name: 'Sarah\'s Advice' }
+      audioClip: { id: 'grocer3', src: '/music/dark.mp3', name: 'Sarah\'s Advice' }
     }
   ], []); // Empty dependency array since these configs never change
   
@@ -120,16 +120,24 @@ const PixelAdventure: React.FC = () => {
     // Update multiple NPCs (for shop)
     if (currentLocation === GameLocation.SHOP) {
       multipleNPCs.updateNPCPositions();
+      // Also check distance for audio stopping in the game loop for better performance
+      multipleNPCs.checkDistanceAndStopAudio();
     }
-  }, [currentLocation, npcBehavior.updateNPCPosition, multipleNPCs.updateNPCPositions]);
+  }, [currentLocation, npcBehavior.updateNPCPosition, multipleNPCs.updateNPCPositions, multipleNPCs.checkDistanceAndStopAudio]);
   
   const handleInteraction = useCallback((onLocationChange: (location: GameLocation) => void) => {
+    console.log(`🎮 X key pressed! Current location: ${currentLocation}`);
+    
     // Handle NPC interactions in shop
     if (currentLocation === GameLocation.SHOP) {
+      console.log(`🏪 In shop, looking for nearby NPCs...`);
       const nearbyNPC = multipleNPCs.getNearbyNPC();
       if (nearbyNPC) {
+        console.log(`👋 Found nearby NPC: ${nearbyNPC.name}, calling handleNPCInteraction`);
         multipleNPCs.handleNPCInteraction(nearbyNPC.id);
         return;
+      } else {
+        console.log(`❌ No nearby NPC found in shop`);
       }
     }
     
