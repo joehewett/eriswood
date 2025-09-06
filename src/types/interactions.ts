@@ -1,4 +1,4 @@
-import { GameLocation } from '../types';
+import { GameLocation, InteractionZone } from '../types';
 
 // Define different types of interactions
 export enum InteractionType {
@@ -63,6 +63,8 @@ export interface InteractionContext {
   onModalTrigger: (modalId: string, props?: Record<string, any>) => void;
   onComponentToggle: (componentId: string, action?: 'show' | 'hide' | 'toggle', props?: Record<string, any>) => void;
   setLoading: (loading: boolean) => void;
+  // Zone that triggered this interaction (if applicable)
+  triggeringZone?: InteractionZone;
 }
 
 // Registry for interaction handlers

@@ -238,6 +238,61 @@ export const buildings: Building[] = [
         description: 'Exit to Village',
 
       }
+      ,
+      {
+        id: 'npc-greengrocer-1',
+        name: 'Greengrocer 1',
+        relativeX: 0.35,
+        relativeY: 0.40,
+        relativeWidth: 0.05,
+        relativeHeight: 0.08,
+        interaction: {
+          type: InteractionType.CUSTOM,
+          handlerId: 'npc-audio',
+          customData: {
+            npcId: 'greengrocer-1',
+            audioSrc: '/music/gnometheme.mp3',
+            displayName: 'Tom the Grocer'
+          }
+        },
+        description: 'Talk to Tom (Press X)'
+      },
+      {
+        id: 'npc-greengrocer-2',
+        name: 'Greengrocer 2',
+        relativeX: 0.55,
+        relativeY: 0.38,
+        relativeWidth: 0.05,
+        relativeHeight: 0.08,
+        interaction: {
+          type: InteractionType.CUSTOM,
+          handlerId: 'npc-audio',
+          customData: {
+            npcId: 'greengrocer-2',
+            audioSrc: '/music/marooned.mp3',
+            displayName: 'Sara the Vendor'
+          }
+        },
+        description: 'Talk to Sara (Press X)'
+      },
+      {
+        id: 'npc-greengrocer-3',
+        name: 'Greengrocer 3',
+        relativeX: 0.70,
+        relativeY: 0.55,
+        relativeWidth: 0.05,
+        relativeHeight: 0.08,
+        interaction: {
+          type: InteractionType.CUSTOM,
+          handlerId: 'npc-audio',
+          customData: {
+            npcId: 'greengrocer-3',
+            audioSrc: '/music/diangoslittlehelpers.mp3',
+            displayName: 'Old Man Wilf'
+          }
+        },
+        description: 'Talk to Wilf (Press X)'
+      }
     ]
   },
   {

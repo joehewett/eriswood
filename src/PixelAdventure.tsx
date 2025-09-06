@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GameLocation } from './types';
-import { GameMap, Character, LoadingScreen, InteractionZones, BuildingInteractionPrompt, MultiplayerPlayers, ConnectionStatus, CharacterSelect, ProximityVisualization, MessageBoard, BookReviewInventory } from './components';
+import { GameMap, Character, LoadingScreen, InteractionZones, BuildingInteractionPrompt, MultiplayerPlayers, ConnectionStatus, CharacterSelect, ProximityVisualization, MessageBoard, BookReviewInventory, NpcAudioPlayer } from './components';
 import { 
   useFixedCanvasLayout,
   usePlayerMovement, 
@@ -12,7 +12,7 @@ import {
   useCenteredFixedCanvasLayout,
   useInteractionSystem
 } from './hooks';
-import { getInteractionZonesForLocation, convertRelativeZonesToCanvas } from './utils';
+import { getInteractionZonesForLocation, convertRelativeZonesToCanvas, canvasToScreenPosition } from './utils';
 
 const PixelAdventure: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<GameLocation>(GameLocation.VILLAGE);
@@ -29,6 +29,8 @@ const PixelAdventure: React.FC = () => {
   
   // Get collision zones in canvas coordinates for movement collision detection
   const canvasCollisionZones = convertRelativeZonesToCanvas(getInteractionZonesForLocation(currentLocation));
+  // Precompute NPC zones for rendering and proximity (canvas coords)
+  const npcZones = convertRelativeZonesToCanvas(getInteractionZonesForLocation(GameLocation.SHOP).filter(z => z.id.startsWith('npc-')));
   
   const buildingInteractions = useBuildingInteractions({
     playerPosition: { x: 0, y: 0 }, // Will be updated by the movement hooks
@@ -136,6 +138,18 @@ const PixelAdventure: React.FC = () => {
         showDebugBounds={showDebug}
       />
 
+      {/* NPCs inside the Shop */}
+      {currentLocation === GameLocation.SHOP && npcZones.map((zone, idx) => (
+        <Character
+          key={zone.id}
+          position={canvasToScreenPosition({ x: (zone.x ?? 0), y: (zone.y ?? 0) }, mapRect)}
+          currentFrame={0}
+          alt={zone.name}
+          isNPC={true}
+          spriteVariant={(idx % 3) + 1}
+        />
+      ))}
+
       {/* Other multiplayer players */}
       <MultiplayerPlayers 
         players={multiplayer.otherPlayers}
@@ -180,6 +194,15 @@ const PixelAdventure: React.FC = () => {
         onClose={() => interactionSystem.handleComponentToggle('book-reviews', 'hide')}
         currentPlayerId={multiplayer.currentPlayerId}
         currentPlayerName={selectedCharacter ?? 'Player'}
+      />
+
+      {/* NPC Audio Player (global, driven by component toggle) */}
+      <NpcAudioPlayer
+        isVisible={interactionSystem.isComponentVisible('npc-audio')}
+        props={interactionSystem.getComponentProps('npc-audio')}
+        playerCanvasPosition={playerMovement.canvasPosition}
+        currentLocation={currentLocation}
+        onHide={() => interactionSystem.handleComponentToggle('npc-audio', 'hide')}
       />
 
       {/* Debug Toggle Button */}

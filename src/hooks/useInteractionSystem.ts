@@ -77,7 +77,8 @@ export const useInteractionSystem = ({
       onLocationChange,
       onModalTrigger: handleModalTrigger,
       onComponentToggle: handleComponentToggle,
-      setLoading
+      setLoading,
+      triggeringZone: interactionZone
     };
 
     await interactionSystem.executeInteraction(interactionZone.interaction, context);

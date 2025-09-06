@@ -10,7 +10,7 @@ import {
   CustomInteractionData
 } from '../types/interactions';
 import { GameLocation } from '../types';
-import { getLocationImageSrc, gameConfig } from '../utils';
+import { getLocationImageSrc, gameConfig, getInteractionZoneCenter } from '../utils';
 
 export class InteractionSystem {
   private handlers: InteractionHandlerRegistry = {};
@@ -119,6 +119,18 @@ export class InteractionSystem {
     this.registerHandler('diary-entry', async (data, context) => {
       const customData = (data as CustomInteractionData).customData;
       context.onModalTrigger('diary-entry-create', customData);
+    });
+
+    // NPC audio handler: show an audio component tied to a specific NPC id
+    this.registerHandler('npc-audio', async (data, context) => {
+      const customData = (data as CustomInteractionData).customData || {};
+      const npcCanvasPosition = context.triggeringZone ? getInteractionZoneCenter(context.triggeringZone) : undefined;
+      // Expected customData: { npcId: string, audioSrc: string, displayName?: string }
+      context.onComponentToggle('npc-audio', 'show', {
+        ...customData,
+        location: context.currentLocation,
+        npcCanvasPosition
+      });
     });
   }
 }
