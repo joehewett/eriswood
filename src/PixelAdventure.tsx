@@ -10,7 +10,8 @@ import {
   useImageBounds,
   usePartyKitMultiplayer,
   useCenteredFixedCanvasLayout,
-  useInteractionSystem
+  useInteractionSystem,
+  useShopNPCs
 } from './hooks';
 import { getInteractionZonesForLocation, convertRelativeZonesToCanvas, canvasToScreenPosition } from './utils';
 
@@ -29,8 +30,8 @@ const PixelAdventure: React.FC = () => {
   
   // Get collision zones in canvas coordinates for movement collision detection
   const canvasCollisionZones = convertRelativeZonesToCanvas(getInteractionZonesForLocation(currentLocation));
-  // Precompute NPC zones for rendering and proximity (canvas coords)
-  const npcZones = convertRelativeZonesToCanvas(getInteractionZonesForLocation(GameLocation.SHOP).filter(z => z.id.startsWith('npc-')));
+  // Shop NPCs (moving)
+  const shopNPCs = useShopNPCs(currentLocation);
   
   const buildingInteractions = useBuildingInteractions({
     playerPosition: { x: 0, y: 0 }, // Will be updated by the movement hooks
@@ -85,6 +86,7 @@ const PixelAdventure: React.FC = () => {
   useGameLoop({
     updatePlayerPosition: playerMovement.updatePosition,
     updateNPCPosition: npcBehavior.updateNPCPosition,
+    updateShopNPCPositions: shopNPCs.updateNpcPositions,
     handlePlayerKeyDown: playerMovement.handleKeyDown,
     handlePlayerKeyUp: playerMovement.handleKeyUp,
     handleInteraction: (onLocationChange) => {
@@ -138,15 +140,16 @@ const PixelAdventure: React.FC = () => {
         showDebugBounds={showDebug}
       />
 
-      {/* NPCs inside the Shop */}
-      {currentLocation === GameLocation.SHOP && npcZones.map((zone, idx) => (
+      {/* NPCs inside the Shop (moving) */}
+      {currentLocation === GameLocation.SHOP && shopNPCs.npcs.map((npc, idx) => (
         <Character
-          key={zone.id}
-          position={canvasToScreenPosition({ x: (zone.x ?? 0), y: (zone.y ?? 0) }, mapRect)}
-          currentFrame={0}
-          alt={zone.name}
+          key={npc.id}
+          position={canvasToScreenPosition(npc.position, mapRect)}
+          currentFrame={npc.frame}
+          alt={npc.id}
           isNPC={true}
           spriteVariant={(idx % 3) + 1}
+          facingDirection={npc.facingDirection}
         />
       ))}
 

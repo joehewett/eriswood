@@ -4,6 +4,7 @@ import { GameLocation } from '../types';
 interface UseGameLoopProps {
   updatePlayerPosition: () => void;
   updateNPCPosition: () => void;
+  updateShopNPCPositions?: () => void;
   handlePlayerKeyDown: (event: KeyboardEvent) => void;
   handlePlayerKeyUp: (event: KeyboardEvent) => void;
   handleInteraction: (onLocationChange: (location: GameLocation) => void) => void;
@@ -14,6 +15,7 @@ interface UseGameLoopProps {
 export const useGameLoop = ({
   updatePlayerPosition,
   updateNPCPosition,
+  updateShopNPCPositions,
   handlePlayerKeyDown,
   handlePlayerKeyUp,
   handleInteraction,
@@ -47,6 +49,9 @@ export const useGameLoop = ({
 
       updatePlayerPosition();
       updateNPCPosition();
+      if (updateShopNPCPositions) {
+        updateShopNPCPositions();
+      }
 
       animationRef.current = requestAnimationFrame(gameLoop);
     };
