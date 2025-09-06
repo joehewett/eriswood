@@ -58,6 +58,12 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
     return nodeRefs.current[reviewId];
   };
 
+  // Helper function to get book image based on index (cycling through book1-book13)
+  const getBookImage = (index: number) => {
+    const bookNumber = (index % 13) + 1;
+    return `/books/book${bookNumber}.png`;
+  };
+
   // Load reviews when component opens
   useEffect(() => {
     if (isOpen) {
@@ -280,7 +286,7 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
               </div>
             ) : (
               <div className="relative w-full h-full">
-                {reviews.map((review) => {
+                {reviews.map((review, index) => {
                   // Get or create a ref for this review
                   const nodeRef = getNodeRef(review.id);
                   
@@ -322,7 +328,7 @@ export const BookReviewInventory: React.FC<BookReviewInventoryProps> = ({
                         >
                           {/* Book Image */}
                           <img
-                            src={`/game/book1.png`}
+                            src={getBookImage(index)}
                             alt={review.title}
                             className="w-full h-full object-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 select-none"
                             draggable={false}
